@@ -29,7 +29,6 @@ class AuthService
             'role' => 'user',
             'email_verified_at' => Date::now(),
             'password' => Hash::make($data['password']),
-            //'verification_token' => Str::generateToken(64),
             'verification_token' => null,
             'active' => 0,
             'created_at' => Date::now(),

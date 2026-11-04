@@ -5,6 +5,7 @@ namespace Src\Auth;
 use Core\Http\Request;
 use Core\Http\Response;
 use Core\Security\SanctumAPI;
+use Core\Support\Log;
 use Src\Models\Token;
 use Src\Auth\AuthService;
 
@@ -66,8 +67,10 @@ class AuthController
             return $res->success(['message' => 'Usuario registrado. Ahora inicia sesión.'], 201)->send();
 
         } catch (\Core\Validation\ValidationException $e) {
+            Log::debug($e->getMessage());
             return $res->json(['errors' => $e->errors], 422)->send();
         } catch (\RuntimeException $e) {
+            Log::debug($e->getMessage());
             return $res->error($e->getMessage(), 409)->send();
         }
     }
@@ -100,8 +103,10 @@ class AuthController
             ])->send();
 
         } catch (\Core\Validation\ValidationException $e) {
+            Log::debug($e->getMessage());
             return $res->json(['errors' => $e->errors], 422)->send();
         } catch (\RuntimeException $e) {
+            Log::debug($e->getMessage());
             return $res->error($e->getMessage(), 401)->send();
         }
     }

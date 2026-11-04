@@ -37,7 +37,7 @@ class ORM
         }
     }
 
-    public function where(string $column, string $comparison, $value): self
+    public function where(string $column, string $comparison, $value, string $boolean = 'AND'): self
     {
         $allowed = ['=', '!=', '<', '>', '<=', '>=', 'LIKE'];
         if (!in_array($comparison, $allowed, true)) {
@@ -47,11 +47,107 @@ class ORM
             throw new InvalidArgumentException("Columna inválida");
         }
 
-        $param = ":w" . count($this->wheres);
-        $this->wheres[] = "{$column} {$comparison} {$param}";
+        $boolean = strtoupper($boolean);
+        if (!in_array($boolean, ['AND', 'OR'], true)) {
+            throw new InvalidArgumentException("Booleano inválido: {$boolean}");
+        }
+
+        $param = ":w" . count($this->params);
+        $this->wheres[] = [
+            "type" => "basic",
+            "sql" => "{$column} {$comparison} {$param}",
+            "bool" => $boolean,
+        ];
         $this->params[$param] = $value;
 
         return $this;
+    }
+
+    public function orWhere(string $column, string $comparison, $value): self
+    {
+        return $this->where($column, $comparison, $value, 'OR');
+    }
+
+    /**
+     * Agrupa condiciones en un bloque entre paréntesis.
+     *
+     * Uso:
+     *   $qb->whereGroup(function ($q) use ($like) {
+     *       $q->where('name', 'LIKE', $like)
+     *         ->orWhere('email', 'LIKE', $like);
+     *   });
+     *
+     * Genera: WHERE (name LIKE ? OR email LIKE ?) AND ...
+     */
+    public function whereGroup(callable $callback, string $boolean = 'AND'): self
+    {
+        $boolean = strtoupper($boolean);
+        if (!in_array($boolean, ['AND', 'OR'], true)) {
+            throw new InvalidArgumentException("Booleano inválido: {$boolean}");
+        }
+
+        // Guardamos el estado previo y aislamos el grupo
+        $prevWheres = $this->wheres;
+        $this->wheres = [];
+
+        // El callback agrega condiciones al grupo (usa $this->params globales)
+        $callback($this);
+
+        // Construimos el SQL interno del grupo SIN el " WHERE (...)"
+        $innerParts = [];
+        foreach ($this->wheres as $i => $w) {
+            $bool = $i === 0 ? '' : ' ' . $w['bool'] . ' ';
+            $innerParts[] = $bool . $w['sql'];
+        }
+        $inner = implode('', $innerParts);
+
+        // Restauramos el estado previo y agregamos el grupo como un bloque
+        $this->wheres = $prevWheres;
+        $this->wheres[] = [
+            "type" => "group",
+            "sql" => $inner,
+            "bool" => $boolean,
+        ];
+
+        return $this;
+    }
+
+    private function buildWhere(): string
+    {
+        if (!$this->wheres) {
+            return '';
+        }
+
+        // Separamos básicos de grupos
+        $basics = [];
+        $groups = [];
+        foreach ($this->wheres as $w) {
+            if (($w['type'] ?? 'basic') === 'group') {
+                $groups[] = $w;
+            } else {
+                $basics[] = $w;
+            }
+        }
+
+        $blocks = [];
+
+        // Bloque de básicos: todos juntos dentro de un paréntesis
+        // (mantiene el comportamiento anterior para where/orWhere sueltos)
+        if ($basics) {
+            $inner = '';
+            foreach ($basics as $i => $w) {
+                $bool = $i === 0 ? '' : ' ' . $w['bool'] . ' ';
+                $inner .= $bool . $w['sql'];
+            }
+            $blocks[] = '(' . $inner . ')';
+        }
+
+        // Bloques de grupo: cada uno ya viene entre paréntesis
+        foreach ($groups as $g) {
+            $blocks[] = '(' . $g['sql'] . ')';
+        }
+
+        return ' WHERE ' . implode(' AND ', $blocks);
     }
 
     public function paginate(int $page = 1, int $perPage = 15, array $columns = ['*']): array
@@ -66,7 +162,6 @@ class ORM
         $items = $this->get($columns);
 
         $lastPage = (int) ceil($total / $perPage);
-
 
         $this->reset();
 
@@ -87,10 +182,7 @@ class ORM
 
     public function count(): int
     {
-        $sql = "SELECT COUNT(*) FROM {$this->table}";
-        if ($this->wheres) {
-            $sql .= " WHERE " . implode(' AND ', $this->wheres);
-        }
+        $sql = "SELECT COUNT(*) FROM {$this->table}" . $this->buildWhere();
         $stm = $this->connection->prepare($sql);
         $stm->execute($this->params);
         return (int) $stm->fetchColumn();
@@ -109,9 +201,7 @@ class ORM
         try {
             $sql = "SELECT {$values} FROM {$this->table}";
 
-            if ($this->wheres) {
-                $sql .= " WHERE " . implode(' AND ', $this->wheres);
-            }
+            $sql .= $this->buildWhere();
 
             if ($this->orders) {
                 $sql .= " ORDER BY " . implode(', ', $this->orders);

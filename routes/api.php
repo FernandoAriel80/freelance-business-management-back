@@ -5,7 +5,7 @@ use Core\Middleware\AdminMiddleware;
 use Src\Models\Token;
 use Src\Models\User;
 
-$route->group(function ($route) use ($pdo, $authController, $adminController, $customerController) {
+$route->group(function ($route) use ($pdo, $authController, $adminController, $customerController, $appointmentController) {
     $route->prefix('api');
 
 
@@ -24,10 +24,9 @@ $route->group(function ($route) use ($pdo, $authController, $adminController, $c
 
         $route->get('/profile', fn($req, $res) => $authController->profile($req, $res));
 
-        // $route->get('/profile', fn($req, $res) => $profileController->show($req, $res));
     });
 
-    $route->group(function ($route) use ($pdo, $adminController, $customerController) {
+    $route->group(function ($route) use ($pdo, $adminController, $customerController, $appointmentController) {
         $route->prefix('admin');
         $route->middleware(new AdminMiddleware(new User($pdo)));
 
@@ -41,6 +40,12 @@ $route->group(function ($route) use ($pdo, $authController, $adminController, $c
             $route->put('/update/{id}', fn($req, $res) => $customerController->update($req, $res));
             $route->get('/show/{id}', fn($req, $res) => $customerController->show($req, $res));
             $route->delete('/delete/{id}', fn($req, $res) => $customerController->delete($req, $res));
+        });
+
+        $route->group(function ($route) use ($appointmentController) {
+            $route->prefix('appointment');
+            $route->post('/create', fn($req, $res) => $appointmentController->create($req, $res));
+
         });
     });
 });

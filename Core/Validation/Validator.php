@@ -14,44 +14,6 @@ class Validator
         $this->rules = $rules;
         $this->customMessages = $customMessages;
     }
-
-    /*     public function validate(): array
-        {
-            foreach ($this->rules as $field => $ruleSet) {
-                $rules = explode('|', $ruleSet);
-                $value = $this->data[$field] ?? null;
-                $isRequired = in_array('required', $rules);
-                $isNullable = in_array('nullable', $rules);
-                $isPresent = in_array('present', $rules);
-
-                // 'present': el campo debe existir, aunque sea null/vacío
-                if ($isPresent && !array_key_exists($field, $this->data)) {
-                    $this->addError($field, 'present', 'debe estar presente', []);
-                    continue;
-                }
-
-                // 'nullable': si es null, se saltan el resto de reglas (salvo present, ya chequeado)
-                if ($value === null && $isNullable) {
-                    continue;
-                }
-
-                // Si no es required y está vacío, no validamos más (comportamiento original)
-                if (!$isRequired && ($value === null || $value === '')) {
-                    continue;
-                }
-
-                foreach ($rules as $rule) {
-                    $this->applyRule($field, $value, $rule);
-                }
-            }
-
-            if (!empty($this->errors)) {
-                throw new ValidationException($this->errors);
-            }
-
-            return array_intersect_key($this->data, $this->rules);
-        } */
-
     public function validate(): array
     {
         foreach ($this->rules as $field => $ruleSet) {

@@ -13,6 +13,7 @@ use Core\Database\Connection;
 use Src\Auth\AuthController;
 use Src\Auth\AuthService;
 use Src\Controllers\AdminController;
+use Src\Controllers\AppointmentController;
 use Src\Controllers\CustomerController;
 use Src\Controllers\EjemploController;
 use Src\Models\Customer;
@@ -45,18 +46,13 @@ $cors = new CorsMiddleware(
 
 
 $authController = new AuthController(new AuthService(new UserRepository(new User($pdo))), new Token($pdo));
-$ejemploController = new EjemploController();
 $adminController = new AdminController(new AdminService(new UserRepository(new User($pdo))));
 $customerController = new CustomerController(new CustomerService(new CustomerRepository(new Customer($pdo))));
+$appointmentController = new AppointmentController();
 
-$route->group(function ($route) use ($cors, $pdo, $authController, $adminController, $customerController) {
+$route->group(function ($route) use ($cors, $pdo, $authController, $adminController, $customerController, $appointmentController) {
     $route->middleware($cors);
     require __DIR__ . '/../routes/api.php';
 });
-/* 
-echo "<pre>";
-print_r($route->getRoutes());
-echo "</pre>";
-exit; */
 
 $route->dispatch($req, $res, 'Pagina no encontrada.', $cors);

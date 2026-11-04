@@ -88,7 +88,7 @@ CREATE TABLE customers (
     UNIQUE KEY uq_customers_email (email)
 );
 
-/* CREATE TABLE appointments (
+CREATE TABLE appointments (
     id CHAR(36) NOT NULL,
     customer_id CHAR(36) NOT NULL,
     title VARCHAR(200) NULL,
@@ -108,11 +108,12 @@ CREATE TABLE customers (
         -- videollamada
         'phone',
         -- telefono
+        'message' --mensajes
         'other' -- otro
     ) NOT NULL DEFAULT 'video_call',
-    location VARCHAR(255) NULL,
+    location VARCHAR(500) NULL,
     -- dirección o link de Zoom/Meet
-    meeting_url VARCHAR(255) NULL,
+    meeting_url VARCHAR(500) NULL,
     -- link de la videollamada
     status ENUM(
         'scheduled',
@@ -138,7 +139,7 @@ CREATE TABLE customers (
     PRIMARY KEY (id),
     CONSTRAINT fk_appointments_customer FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
-
+/* 
 CREATE TABLE meeting_notes (
     id CHAR(36) NOT NULL,
     appointment_id CHAR(36) NOT NULL,

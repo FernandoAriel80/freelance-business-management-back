@@ -51,12 +51,13 @@ class CustomerService
 
         return $payload;
     }
-    public function getAll($currentPage)
+    public function getAll($currentPage, $query, $filters, $sort)
     {
         //$currentPage = 1;
+
         $perPage = 8;
 
-        $customers = $this->customerRepository->all($currentPage, $perPage);
+        $customers = $this->customerRepository->all($currentPage, $perPage, $query, $filters, $sort);
         if (!$customers)
             throw new RuntimeException('Error al obtener los clientes.');
         $data = [];

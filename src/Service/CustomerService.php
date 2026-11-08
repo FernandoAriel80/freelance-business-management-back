@@ -18,7 +18,7 @@ class CustomerService
     public function createCustomer($data)
     {
 
-        $existing = $this->customerRepository->findByEmail($data['email']);
+        $existing = $this->customerRepository->findByEmail($data['company']);
         if ($existing)
             throw new RuntimeException('Error, el cliente ya existe con ese correo.');
         $payload = [
@@ -51,12 +51,13 @@ class CustomerService
 
         return $payload;
     }
-    public function getAll($currentPage)
+    public function getAll($currentPage, $query, $filters, $sort)
     {
         //$currentPage = 1;
+
         $perPage = 8;
 
-        $customers = $this->customerRepository->all($currentPage, $perPage);
+        $customers = $this->customerRepository->all($currentPage, $perPage, $query, $filters, $sort);
         if (!$customers)
             throw new RuntimeException('Error al obtener los clientes.');
         $data = [];

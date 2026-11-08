@@ -133,7 +133,34 @@ class CustomerController
     {
         try {
             $currentPage = $req->has('page') ? $req->param('page') : 1;
-            $customers = $this->customerService->getAll($currentPage);
+            $query = $query = $req->input('q') ?? '';
+
+            $allowedFilters = [
+                'state' => ['new', 'contacted', 'interested', 'proposal_sent', 'negotiating', 'closed'], // tus valores reales
+                'priority' => ['high', 'medium', 'low'],
+            ];
+
+            $filters = [];
+            foreach ($allowedFilters as $field => $allowedValues) {
+                if (!empty($req->input($field)) && in_array($req->input($field), $allowedValues, true)) {
+                    $filters[$field] = $req->input($field);
+                }
+            }
+
+            // ordenamiento (whitelist columna+dirección)
+            $allowedSorts = [
+                'created_at_desc' => ['created_at', 'DESC'],
+                'created_at_asc' => ['created_at', 'ASC'],
+                'name_asc' => ['name', 'ASC'],
+                'name_desc' => ['name', 'DESC'],
+                'company_asc' => ['company', 'ASC'],
+                'company_desc' => ['company', 'DESC'],
+                'priority_asc' => ['priority', 'ASC'],
+                'priority_desc' => ['priority', 'DESC'],
+            ];
+            $sort = $allowedSorts[$req->input('sort') ?? ''] ?? ['created_at', 'DESC'];
+
+            $customers = $this->customerService->getAll($currentPage, $query, $filters, $sort);
 
             return $res->success($customers)->send();
         } catch (\RuntimeException $e) {

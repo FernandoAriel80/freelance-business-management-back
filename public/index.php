@@ -16,12 +16,15 @@ use Src\Controllers\AdminController;
 use Src\Controllers\AppointmentController;
 use Src\Controllers\CustomerController;
 use Src\Controllers\EjemploController;
+use Src\Models\Appointment;
 use Src\Models\Customer;
 use Src\Models\Token;
 use Src\Models\User;
+use Src\Repository\AppointmentRepository;
 use Src\Repository\CustomerRepository;
 use Src\Repository\UserRepository;
 use Src\Service\AdminService;
+use Src\Service\AppointmentService;
 use Src\Service\CustomerService;
 
 Env::load(__DIR__ . '/../.env');
@@ -48,7 +51,7 @@ $cors = new CorsMiddleware(
 $authController = new AuthController(new AuthService(new UserRepository(new User($pdo))), new Token($pdo));
 $adminController = new AdminController(new AdminService(new UserRepository(new User($pdo))));
 $customerController = new CustomerController(new CustomerService(new CustomerRepository(new Customer($pdo))));
-$appointmentController = new AppointmentController();
+$appointmentController = new AppointmentController(new AppointmentService(new AppointmentRepository(new Appointment($pdo))));
 
 $route->group(function ($route) use ($cors, $pdo, $authController, $adminController, $customerController, $appointmentController) {
     $route->middleware($cors);

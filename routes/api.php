@@ -45,6 +45,10 @@ $route->group(function ($route) use ($pdo, $authController, $adminController, $c
         $route->group(function ($route) use ($appointmentController) {
             $route->prefix('appointment');
             $route->post('/create', fn($req, $res) => $appointmentController->create($req, $res));
+            $route->put('/update/{id}', fn($req, $res) => $appointmentController->update($req, $res));
+            $route->get('/all/{page}', fn($req, $res) => $appointmentController->all($req, $res));
+            $route->get('/customers/last/{customerId}', fn($req, $res) => $appointmentController->getLastByCustomer($req, $res));
+            $route->get('/customers/all/{customerId}', fn($req, $res) => $appointmentController->getAllByCustomer($req, $res));
 
         });
     });

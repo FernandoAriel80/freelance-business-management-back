@@ -18,7 +18,7 @@ class CustomerService
     public function createCustomer($data)
     {
 
-        $existing = $this->customerRepository->findByEmail($data['email']);
+        $existing = $this->customerRepository->findByEmail($data['company']);
         if ($existing)
             throw new RuntimeException('Error, el cliente ya existe con ese correo.');
         $payload = [

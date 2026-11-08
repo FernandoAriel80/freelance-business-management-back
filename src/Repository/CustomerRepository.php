@@ -11,9 +11,28 @@ class CustomerRepository
         $this->customer = $customer;
     }
 
-    public function all($page, $perPage)
+    public function all($page, $perPage, $query = '', array $filters = [], array $sort = ['created_at', 'DESC'])
     {
-        return $this->customer->orderBy('created_at', 'DESC')->paginate($page, $perPage);
+        [$sortColumn, $sortDirection] = $sort;
+        $qb = $this->customer->orderBy($sortColumn, $sortDirection);
+
+        if ($query !== '') {
+            $like = "%{$query}%";
+
+            $qb->whereGroup(function ($q) use ($like) {
+                $q->where('name', 'LIKE', $like)
+                    ->orWhere('email', 'LIKE', $like)
+                    ->orWhere('company', 'LIKE', $like)
+                    ->orWhere('cell_phone', 'LIKE', $like)
+                    ->orWhere('landline_phone', 'LIKE', $like);
+            });
+        }
+
+        foreach ($filters as $field => $value) {
+            $qb->where($field, '=', $value);
+        }
+
+        return $qb->paginate($page, $perPage);
     }
 
     public function findById($id)

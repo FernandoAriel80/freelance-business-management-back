@@ -45,7 +45,7 @@ class AuthService
     {
         $user = $this->userRepository->findByEmail($data['email']);
 
-        if (!$user || !password_verify($data['password'], $user['password'])) {
+        if (!$user || !Hash::verify($data['password'], $user['password'])) {
             throw new \RuntimeException('Credenciales inválidas.');
         }
 

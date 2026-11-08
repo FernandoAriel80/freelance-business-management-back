@@ -45,7 +45,7 @@ class CustomerService
         $payload = [
             ...$customer,
             'social_links' => Str::jsonToString($customer['social_links']),
-            'date_contact' => Date::format($customer['date_contact'], 'Y-m-d')
+            'date_contact' => $customer['date_contact'] != null ? Date::format($customer['date_contact'], 'Y-m-d') : null,
 
         ];
 
